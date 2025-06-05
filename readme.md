@@ -129,7 +129,3 @@ It has not been audited or optimized for production use.
 
 ---
 
-This design provides a robust mechanism for managing an auction with stringent rules for bidding,
- thorough safeguards against reentrancy, and transparent state changes through events. 
-Each component—the functions, modifiers, and events—plays a critical role in ensuring that the 
-auction operates securely throughout its lifecycle.
