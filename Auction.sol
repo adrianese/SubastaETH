@@ -90,9 +90,8 @@ contract Auction {
      *      If the bidder is new, their address is added to the bidders list.
      */
     function newBid() external payable onlyBeforeEnd auctionNotEnded { 
-        require(msg.value > 0, "Bid amount must be greater than zero");
-        require(msg.value >= (highestBid * 105) / 100, "Bid must be at least 5% higher than the current highest bid");
-        
+        require(msg.value > 0 && msg.value >= (highestBid * 105) / 100, "Invalid bid, check the amount");
+    
         if (bids[msg.sender] == 0) {
             biddersList.push(msg.sender); // Add bidder if bidding for the first time.
         }
@@ -115,9 +114,10 @@ contract Auction {
         
         address[] memory bidders = new address[](totalBids);
         uint[] memory amounts = new uint[](totalBids);
-        
+        // Optimization: Declare bidder outside the loop
+        address bidder;
         for (uint i = 0; i < totalBids; i++) {
-            address bidder = biddersList[i];
+            bidder = biddersList[i];
             bidders[i] = bidder;
             amounts[i] = bids[bidder];
         }
@@ -133,9 +133,7 @@ contract Auction {
      */
     function partialRefund() external payable auctionNotEnded {
         uint amount = bids[msg.sender];
-        require(amount > 0, "No deposits available for withdrawal.");
-        require(msg.sender != highestBidder, "Winner cannot withdraw excess funds.");
-        
+         require(msg.sender != highestBidder || bids[msg.sender] > highestBid, "Cannot withdraw last bid");
         bids[msg.sender] = 0; // Prevent reentrancy.
         uint refund = (amount * 98) / 100; // Deduct a 2% fee.
         payable(msg.sender).transfer(refund);
@@ -149,9 +147,9 @@ contract Auction {
      */
     function refundAllNonWinners() external onlyAfterAuctionEnded {
         uint totalBidders = biddersList.length;
-        
+        address bidder;     // Optimization: Declare bidder outside the loop
         for (uint i = 0; i < totalBidders; i++) {
-            address bidder = biddersList[i];
+            bidder = biddersList[i];
             
             if (bidder != highestBidder && bids[bidder] > 0) {
                 uint refundAmount = (bids[bidder] * 98) / 100; // Apply 2% fee.
