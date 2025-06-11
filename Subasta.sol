@@ -133,7 +133,10 @@ contract Subasta {
      */
     function reembolsoParcial() external payable subastaNoTerminada {
         uint amount = bids[msg.sender];
-        require(msg.sender != highestBidder || bids[msg.sender] > highestBid, "No puede retirar fondos");
+        //require(msg.sender != highestBidder || bids[msg.sender] > highestBid, "No puede retirar fondos");
+        if (msg.sender == highestBidder || amount == 0) {
+        revert("No puede retirar fondos.");
+        }
 
         bids[msg.sender] = 0; // Previene reentradas.
         uint refund = (amount * 98) / 100; // Deducir una tarifa del 2%.
