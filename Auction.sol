@@ -133,7 +133,7 @@ contract Auction {
      */
     function partialRefund() external payable auctionNotEnded {
         uint amount = bids[msg.sender];
-         require(msg.sender != highestBidder || bids[msg.sender] > highestBid, "Cannot withdraw last bid");
+         require(msg.sender != highestBidder && bids[msg.sender] > highestBid, "Cannot withdraw last bid");
         bids[msg.sender] = 0; // Prevent reentrancy.
         uint refund = (amount * 98) / 100; // Deduct a 2% fee.
         payable(msg.sender).transfer(refund);
