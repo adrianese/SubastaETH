@@ -91,6 +91,7 @@ contract Auction {
      */
     function newBid() external payable onlyBeforeEnd auctionNotEnded { 
         require(msg.value > 0 && msg.value >= (highestBid * 105) / 100, "Invalid bid, check the amount");
+
     
         if (bids[msg.sender] == 0) {
             biddersList.push(msg.sender); // Add bidder if bidding for the first time.
@@ -131,9 +132,12 @@ contract Auction {
      * @dev The highest bidder (winner) cannot withdraw excess funds.
      *      A 2% fee is deducted from the refund amount.
      */
-    function partialRefund() external payable auctionNotEnded {
+    function partialRefund() external auctionNotEnded {
         uint amount = bids[msg.sender];
-         require(msg.sender != highestBidder && bids[msg.sender] > highestBid, "Cannot withdraw last bid");
+         // require(msg.sender != highestBidder && bids[msg.sender] > highestBid, "Cannot withdraw last bid");
+         if (msg.sender == highestBidder || amount == 0) {
+        revert("Withdrawal not available.");
+        }
         bids[msg.sender] = 0; // Prevent reentrancy.
         uint refund = (amount * 98) / 100; // Deduct a 2% fee.
         payable(msg.sender).transfer(refund);
