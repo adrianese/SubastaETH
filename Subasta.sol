@@ -91,12 +91,10 @@ contract Subasta {
      *      Si el apostador es nuevo, se agrega su direccion al arreglo de apostadores.
      */
     function nuevaOferta() external payable soloAntesDeFin subastaNoTerminada { 
-        require(msg.value > 0, "El monto de la oferta debe ser mayor que cero");
-        require(msg.value >= (highestBid * 105) / 100, "La oferta debe ser al menos 5% mayor que la oferta mas alta");
+        require(msg.value > 0 && msg.value >= (highestBid * 105) / 100, "Oferta invalida, revise el monto");
         
         if (bids[msg.sender] == 0) {
             biddersList.push(msg.sender); // Agregar apostador si oferta por primera vez.
-        }
         
         bids[msg.sender] += msg.value;
         
@@ -116,9 +114,10 @@ contract Subasta {
         
         address[] memory apostadores = new address[](totalBids);
         uint[] memory montos = new uint[](totalBids);
-        
+         
+        address apostador;    // Optimizacion: Declarar apostador fuera del loop
         for (uint i = 0; i < totalBids; i++) {
-            address apostador = biddersList[i];
+            apostador = biddersList[i];
             apostadores[i] = apostador;
             montos[i] = bids[apostador];
         }
@@ -134,9 +133,8 @@ contract Subasta {
      */
     function reembolsoParcial() external payable subastaNoTerminada {
         uint amount = bids[msg.sender];
-        require(amount > 0, "No hay depositos disponibles para retirar.");
-        require(msg.sender != highestBidder, "El ganador no puede retirar fondos excedentes.");
-        
+        require(msg.sender != highestBidder || bids[msg.sender] > highestBid, "No puede retirar fondos");
+
         bids[msg.sender] = 0; // Previene reentradas.
         uint refund = (amount * 98) / 100; // Deducir una tarifa del 2%.
         payable(msg.sender).transfer(refund);
@@ -151,8 +149,9 @@ contract Subasta {
     function reembolsarTodosNoGanadores() external soloDespuesDeSubastaTerminada {
         uint totalApostadores = biddersList.length;
         
+        address apostador ; // Optimizacion: Declarar apostador fuera del loop.
         for (uint i = 0; i < totalApostadores; i++) {
-            address apostador = biddersList[i];
+            apostador = biddersList[i];
             
             if (apostador != highestBidder && bids[apostador] > 0) {
                 uint refundAmount = (bids[apostador] * 98) / 100; // Aplicar tarifa del 2%.
